@@ -15,7 +15,12 @@
 package com.google.firebase.appdistribution.impl;
 
 import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.os.Build;
+import android.support.multidex.BuildConfig;
+
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import com.google.firebase.FirebaseApp;
@@ -38,8 +43,8 @@ import java.util.concurrent.Executors;
  */
 @Keep
 public class FirebaseAppDistributionRegistrar implements ComponentRegistrar {
-
-  private static String TAG = "Registrar:";
+  static final String FEEBACK_TRIGGER_CHANNEL_ID = "AppDistributionInAppFeedbackTrigger";
+  private static final String TAG = "Registrar:";
 
   @Override
   public @NonNull List<Component<?>> getComponents() {
@@ -78,24 +83,26 @@ public class FirebaseAppDistributionRegistrar implements ComponentRegistrar {
     FirebaseAppDistributionTesterApiClient testerApiClient =
         new FirebaseAppDistributionTesterApiClient(
             firebaseApp, firebaseInstallationsApiProvider, new TesterApiHttpClient(firebaseApp));
-    SignInStorage signInStorage = new SignInStorage(context);
+    SharedPreferencesStorage storage = new SharedPreferencesStorage(context);
     FirebaseAppDistributionLifecycleNotifier lifecycleNotifier =
         FirebaseAppDistributionLifecycleNotifier.getInstance();
     ReleaseIdentifier releaseIdentifier = new ReleaseIdentifier(firebaseApp, testerApiClient);
     FirebaseAppDistribution appDistribution =
         new FirebaseAppDistributionImpl(
             firebaseApp,
-            new TesterSignInManager(firebaseApp, firebaseInstallationsApiProvider, signInStorage),
+            new TesterSignInManager(firebaseApp, firebaseInstallationsApiProvider, storage),
             new NewReleaseFetcher(
                 firebaseApp.getApplicationContext(), testerApiClient, releaseIdentifier),
             new ApkUpdater(firebaseApp, new ApkInstaller()),
             new AabUpdater(),
-            signInStorage,
+            storage,
             lifecycleNotifier,
             releaseIdentifier,
             new ScreenshotTaker(firebaseApp, lifecycleNotifier),
             Executors.newSingleThreadExecutor());
 
+    // we don't want default trigger state to persist across app restarts
+    storage.setDefaultTriggerInfo((String) null);
     if (context instanceof Application) {
       Application firebaseApplication = (Application) context;
       firebaseApplication.registerActivityLifecycleCallbacks(lifecycleNotifier);
@@ -110,5 +117,21 @@ public class FirebaseAppDistributionRegistrar implements ComponentRegistrar {
     }
 
     return appDistribution;
+  }
+
+  private void createNotificationChannel(Context context) {
+    // Create the NotificationChannel, but only on API 26+ because
+    // the NotificationChannel class is new and not in the support library
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      NotificationChannel channel = new NotificationChannel(
+              FEEBACK_TRIGGER_CHANNEL_ID,
+              context.getString(R.string.feedback_trigger_channel_name),
+              NotificationManager.IMPORTANCE_MIN);
+      channel.setDescription(context.getString(R.string.feedback_trigger_channel_description));
+      // Register the channel with the system; you can't change the importance
+      // or other notification behaviors after this
+      NotificationManager notificationManager = context.getSystemService(NotificationManager.class);
+      notificationManager.createNotificationChannel(channel);
+    }
   }
 }

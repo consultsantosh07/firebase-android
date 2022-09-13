@@ -46,7 +46,7 @@ class TesterSignInManager {
 
   private final FirebaseApp firebaseApp;
   private final Provider<FirebaseInstallationsApi> firebaseInstallationsApiProvider;
-  private final SignInStorage signInStorage;
+  private final SharedPreferencesStorage storage;
   private final FirebaseAppDistributionLifecycleNotifier lifecycleNotifier;
 
   private final Object signInTaskLock = new Object();
@@ -60,11 +60,11 @@ class TesterSignInManager {
   TesterSignInManager(
       @NonNull FirebaseApp firebaseApp,
       @NonNull Provider<FirebaseInstallationsApi> firebaseInstallationsApiProvider,
-      @NonNull final SignInStorage signInStorage) {
+      @NonNull final SharedPreferencesStorage storage) {
     this(
         firebaseApp,
         firebaseInstallationsApiProvider,
-        signInStorage,
+        storage,
         FirebaseAppDistributionLifecycleNotifier.getInstance());
   }
 
@@ -72,11 +72,11 @@ class TesterSignInManager {
   TesterSignInManager(
       @NonNull FirebaseApp firebaseApp,
       @NonNull Provider<FirebaseInstallationsApi> firebaseInstallationsApiProvider,
-      @NonNull final SignInStorage signInStorage,
+      @NonNull final SharedPreferencesStorage storage,
       @NonNull FirebaseAppDistributionLifecycleNotifier lifecycleNotifier) {
     this.firebaseApp = firebaseApp;
     this.firebaseInstallationsApiProvider = firebaseInstallationsApiProvider;
-    this.signInStorage = signInStorage;
+    this.storage = storage;
     this.lifecycleNotifier = lifecycleNotifier;
 
     lifecycleNotifier.addOnActivityCreatedListener(this::onActivityCreated);
@@ -90,7 +90,7 @@ class TesterSignInManager {
     if (activity instanceof SignInResultActivity) {
       LogWrapper.getInstance().v("Sign in completed");
       this.setSuccessfulSignInResult();
-      this.signInStorage.setSignInStatus(true);
+      this.storage.setSignInStatus(true);
     }
   }
 
@@ -115,7 +115,7 @@ class TesterSignInManager {
 
   @NonNull
   public Task<Void> signInTester() {
-    if (signInStorage.getSignInStatus()) {
+    if (storage.getSignInStatus()) {
       LogWrapper.getInstance().v(TAG + "Tester is already signed in.");
       return Tasks.forResult(null);
     }

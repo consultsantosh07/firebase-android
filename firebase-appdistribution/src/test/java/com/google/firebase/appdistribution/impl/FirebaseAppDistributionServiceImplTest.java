@@ -130,7 +130,7 @@ public class FirebaseAppDistributionServiceImplTest {
   @Mock private NewReleaseFetcher mockNewReleaseFetcher;
   @Mock private ApkUpdater mockApkUpdater;
   @Mock private AabUpdater mockAabUpdater;
-  @Mock private SignInStorage mockSignInStorage;
+  @Mock private SharedPreferencesStorage mockStorage;
   @Mock private FirebaseAppDistributionLifecycleNotifier mockLifecycleNotifier;
   @Mock private ReleaseIdentifier mockReleaseIdentifier;
   @Mock private ScreenshotTaker mockScreenshotTaker;
@@ -161,14 +161,14 @@ public class FirebaseAppDistributionServiceImplTest {
                 mockNewReleaseFetcher,
                 mockApkUpdater,
                 mockAabUpdater,
-                mockSignInStorage,
+                    mockStorage,
                 mockLifecycleNotifier,
                 mockReleaseIdentifier,
                 mockScreenshotTaker,
                 taskExecutor));
 
     when(mockTesterSignInManager.signInTester()).thenReturn(Tasks.forResult(null));
-    when(mockSignInStorage.getSignInStatus()).thenReturn(true);
+    when(mockStorage.getSignInStatus()).thenReturn(true);
 
     when(mockInstallationTokenResult.getToken()).thenReturn(TEST_AUTH_TOKEN);
 
@@ -246,12 +246,12 @@ public class FirebaseAppDistributionServiceImplTest {
     firebaseAppDistribution.checkForNewRelease();
     shadowOf(getMainLooper()).idle();
 
-    verify(mockSignInStorage, times(1)).setSignInStatus(false);
+    verify(mockStorage, times(1)).setSignInStatus(false);
   }
 
   @Test
   public void updateApp_whenNotSignedIn_throwsError() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
 
     UpdateTask updateTask = firebaseAppDistribution.updateApp();
     shadowOf(getMainLooper()).idle();
@@ -338,7 +338,7 @@ public class FirebaseAppDistributionServiceImplTest {
 
   @Test
   public void updateIfNewReleaseAvailable_whenSignInCancelled_checkForUpdateNotCalled() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
     when(mockTesterSignInManager.signInTester())
         .thenReturn(
             Tasks.forException(
@@ -358,7 +358,7 @@ public class FirebaseAppDistributionServiceImplTest {
 
   @Test
   public void updateIfNewReleaseAvailable_whenSignInFailed_checkForUpdateNotCalled() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
     when(mockTesterSignInManager.signInTester())
         .thenReturn(
             Tasks.forException(
@@ -431,7 +431,7 @@ public class FirebaseAppDistributionServiceImplTest {
 
   @Test
   public void updateIfNewReleaseAvailable_whenTesterIsSignedIn_doesNotOpenDialog() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(true);
+    when(mockStorage.getSignInStatus()).thenReturn(true);
 
     firebaseAppDistribution.updateIfNewReleaseAvailable();
     shadowOf(getMainLooper()).idle();
@@ -441,7 +441,7 @@ public class FirebaseAppDistributionServiceImplTest {
 
   @Test
   public void signInTester_whenDialogDismissed_taskFails() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
     Task updateTask = firebaseAppDistribution.updateIfNewReleaseAvailable();
 
     AlertDialog dialog = assertAlertDialogShown();
@@ -457,7 +457,7 @@ public class FirebaseAppDistributionServiceImplTest {
 
   @Test
   public void updateIfNewReleaseAvailable_whenSignInDialogCanceled_taskFails() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
     Task signInTask = firebaseAppDistribution.updateIfNewReleaseAvailable();
 
     AlertDialog dialog = assertAlertDialogShown();
@@ -482,7 +482,7 @@ public class FirebaseAppDistributionServiceImplTest {
   @Test
   public void signOutTester_setsSignInStatusFalse() {
     firebaseAppDistribution.signOutTester();
-    verify(mockSignInStorage).setSignInStatus(false);
+    verify(mockStorage).setSignInStatus(false);
   }
 
   @Test
@@ -517,7 +517,7 @@ public class FirebaseAppDistributionServiceImplTest {
   @Test
   public void updateIfNewReleaseAvailable_fromABackgroundThread_showsSignInDialog()
       throws InterruptedException, ExecutionException {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
 
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     Future<UpdateTask> future =
@@ -530,7 +530,7 @@ public class FirebaseAppDistributionServiceImplTest {
 
   @Test
   public void updateIfNewReleaseAvailable_whenScreenRotates_signInConfirmationDialogReappears() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
     when(activity.isChangingConfigurations()).thenReturn(true);
 
     UpdateTask updateTask = firebaseAppDistribution.updateIfNewReleaseAvailable();
@@ -565,7 +565,7 @@ public class FirebaseAppDistributionServiceImplTest {
   public void
       updateIfNewReleaseAvailable_whenSignInDialogShowingAndNewActivityStarts_signInTaskCancelled() {
     TestActivity testActivity2 = new TestActivity();
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
 
     UpdateTask updateTask = firebaseAppDistribution.updateIfNewReleaseAvailable();
 
@@ -600,7 +600,7 @@ public class FirebaseAppDistributionServiceImplTest {
   @Test
   public void updateAppTask_whenNoReleaseAvailable_throwsError() {
     firebaseAppDistribution.setCachedNewRelease(null);
-    when(mockSignInStorage.getSignInStatus()).thenReturn(true);
+    when(mockStorage.getSignInStatus()).thenReturn(true);
 
     UpdateTask updateTask = firebaseAppDistribution.updateApp();
 
@@ -613,7 +613,7 @@ public class FirebaseAppDistributionServiceImplTest {
     firebaseAppDistribution.setCachedNewRelease(release);
     UpdateTaskImpl updateTaskToReturn = new UpdateTaskImpl();
     doReturn(updateTaskToReturn).when(mockAabUpdater).updateAab(release);
-    when(mockSignInStorage.getSignInStatus()).thenReturn(true);
+    when(mockStorage.getSignInStatus()).thenReturn(true);
 
     UpdateTask updateTask = firebaseAppDistribution.updateApp();
 
@@ -622,7 +622,7 @@ public class FirebaseAppDistributionServiceImplTest {
 
   @Test
   public void updateApp_withApkReleaseAvailable_returnsSameApkTask() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(true);
+    when(mockStorage.getSignInStatus()).thenReturn(true);
     AppDistributionReleaseInternal release = TEST_RELEASE_NEWER_APK_INTERNAL.build();
     firebaseAppDistribution.setCachedNewRelease(release);
     UpdateTaskImpl updateTaskToReturn = new UpdateTaskImpl();

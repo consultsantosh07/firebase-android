@@ -81,4 +81,14 @@ public class FirebaseAppDistributionProxy implements FirebaseAppDistribution {
   public void startFeedback(@NonNull CharSequence infoText) {
     delegate.startFeedback(infoText);
   }
+
+  @Override
+  public void enableFeedbackNotification(int infoTextResourceId) {
+    delegate.enableFeedbackNotification(infoTextResourceId);
+  }
+
+  @Override
+  public void enableFeedbackNotification(@NonNull CharSequence infoText) {
+    delegate.enableFeedbackNotification(infoText);
+  }
 }

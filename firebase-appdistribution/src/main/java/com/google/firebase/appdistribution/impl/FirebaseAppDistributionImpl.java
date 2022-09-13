@@ -21,17 +21,22 @@ import static com.google.firebase.appdistribution.FirebaseAppDistributionExcepti
 import static com.google.firebase.appdistribution.impl.FeedbackActivity.INFO_TEXT_EXTRA_KEY;
 import static com.google.firebase.appdistribution.impl.FeedbackActivity.RELEASE_NAME_EXTRA_KEY;
 import static com.google.firebase.appdistribution.impl.FeedbackActivity.SCREENSHOT_FILENAME_EXTRA_KEY;
+import static com.google.firebase.appdistribution.impl.FirebaseAppDistributionRegistrar.FEEBACK_TRIGGER_CHANNEL_ID;
 import static com.google.firebase.appdistribution.impl.TaskUtils.safeSetTaskException;
 import static com.google.firebase.appdistribution.impl.TaskUtils.safeSetTaskResult;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import androidx.annotation.GuardedBy;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.gms.tasks.Tasks;
@@ -53,6 +58,7 @@ import java.util.concurrent.Executor;
 class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
 
   private static final int UNKNOWN_RELEASE_FILE_SIZE = -1;
+  private static final int FEEDBACK_TRIGGER_NOTIFICATION_ID = 123;
 
   private final FirebaseApp firebaseApp;
   private final TesterSignInManager testerSignInManager;
@@ -60,7 +66,7 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
   private final FirebaseAppDistributionLifecycleNotifier lifecycleNotifier;
   private final ApkUpdater apkUpdater;
   private final AabUpdater aabUpdater;
-  private final SignInStorage signInStorage;
+  private final SharedPreferencesStorage storage;
   private final ReleaseIdentifier releaseIdentifier;
   private final ScreenshotTaker screenshotTaker;
   private final Executor taskExecutor;
@@ -93,7 +99,7 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
       @NonNull NewReleaseFetcher newReleaseFetcher,
       @NonNull ApkUpdater apkUpdater,
       @NonNull AabUpdater aabUpdater,
-      @NonNull SignInStorage signInStorage,
+      @NonNull SharedPreferencesStorage storage,
       @NonNull FirebaseAppDistributionLifecycleNotifier lifecycleNotifier,
       @NonNull ReleaseIdentifier releaseIdentifier,
       @NonNull ScreenshotTaker screenshotTaker,
@@ -103,7 +109,7 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
     this.newReleaseFetcher = newReleaseFetcher;
     this.apkUpdater = apkUpdater;
     this.aabUpdater = aabUpdater;
-    this.signInStorage = signInStorage;
+    this.storage = storage;
     this.releaseIdentifier = releaseIdentifier;
     this.lifecycleNotifier = lifecycleNotifier;
     this.screenshotTaker = screenshotTaker;
@@ -216,7 +222,7 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
 
   @Override
   public boolean isTesterSignedIn() {
-    return signInStorage.getSignInStatus();
+    return storage.getSignInStatus();
   }
 
   @Override
@@ -228,7 +234,7 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
   @Override
   public void signOutTester() {
     setCachedNewRelease(null);
-    signInStorage.setSignInStatus(false);
+    storage.setSignInStatus(false);
   }
 
   @Override
@@ -348,6 +354,16 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
         });
   }
 
+  @Override
+  public void enableFeedbackNotification(int infoTextResourceId) {
+    enableFeedbackNotification(firebaseApp.getApplicationContext().getString(infoTextResourceId));
+  }
+
+  @Override
+  public void enableFeedbackNotification(@NonNull CharSequence infoText) {
+    storage.setDefaultTriggerInfo(infoText.toString());
+  }
+
   @VisibleForTesting
   void onActivityResumed(Activity activity) {
     if (awaitingSignInDialogConfirmation()) {
@@ -372,6 +388,22 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
         }
       }
     }
+
+    String triggerInfo = storage.geDefaultTriggerInfo();
+    if (triggerInfo != null) {
+      Intent intent = new Intent(activity, FeedbackActivity.class);
+      intent.putExtra(RELEASE_NAME_EXTRA_KEY, "TODO: get release name"); // requires login
+      intent.putExtra(INFO_TEXT_EXTRA_KEY, triggerInfo);
+      PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+      NotificationCompat.Builder builder = new NotificationCompat.Builder(activity, FEEBACK_TRIGGER_CHANNEL_ID)
+              .setSmallIcon(activity.getApplicationInfo().icon)
+              .setContentTitle(activity.getText(R.string.default_feedback_trigger_title))
+              .setContentText(activity.getText(R.string.default_feedback_trigger_text))
+              .setPriority(NotificationCompat.PRIORITY_MIN)
+              .setContentIntent(pendingIntent);
+      NotificationManagerCompat notificationManager = NotificationManagerCompat.from(activity);
+      notificationManager.notify(FEEDBACK_TRIGGER_NOTIFICATION_ID, builder.build());
+    }
   }
 
   @VisibleForTesting
@@ -383,6 +415,9 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
           updateConfirmationDialog != null && updateConfirmationDialog.isShowing();
       dismissDialogs();
     }
+
+    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(activity);
+    notificationManager.cancel(FEEDBACK_TRIGGER_NOTIFICATION_ID);
   }
 
   @VisibleForTesting

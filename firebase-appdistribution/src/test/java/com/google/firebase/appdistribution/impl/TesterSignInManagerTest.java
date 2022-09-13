@@ -83,7 +83,7 @@ public class TesterSignInManagerTest {
   @Mock private Provider<FirebaseInstallationsApi> mockFirebaseInstallationsProvider;
   @Mock private FirebaseInstallationsApi mockFirebaseInstallations;
   @Mock private InstallationTokenResult mockInstallationTokenResult;
-  @Mock private SignInStorage mockSignInStorage;
+  @Mock private SharedPreferencesStorage mockStorage;
   @Mock private FirebaseAppDistributionLifecycleNotifier mockLifecycleNotifier;
   @Mock private SignInResultActivity mockSignInResultActivity;
 
@@ -134,7 +134,7 @@ public class TesterSignInManagerTest {
         new TesterSignInManager(
             firebaseApp,
             mockFirebaseInstallationsProvider,
-            mockSignInStorage,
+                mockStorage,
             mockLifecycleNotifier);
   }
 
@@ -165,7 +165,7 @@ public class TesterSignInManagerTest {
 
   @Test
   public void signInTester_whenChromeAvailable_opensCustomTab() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
     ResolveInfo resolveInfo = new ResolveInfo();
     resolveInfo.resolvePackageName = "garbage";
     Intent customTabIntent = new Intent("android.support.customtabs.action.CustomTabsService");
@@ -181,7 +181,7 @@ public class TesterSignInManagerTest {
 
   @Test
   public void signInTester_whenChromeNotAvailable_opensBrowserIntent() {
-    when(mockSignInStorage.getSignInStatus()).thenReturn(false);
+    when(mockStorage.getSignInStatus()).thenReturn(false);
     ResolveInfo resolveInfo = new ResolveInfo();
     resolveInfo.resolvePackageName = "garbage";
     Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(TEST_URL));
@@ -210,7 +210,7 @@ public class TesterSignInManagerTest {
     testerSignInManager.onActivityCreated(mockSignInResultActivity);
 
     assertTrue(signInTask.isSuccessful());
-    verify(mockSignInStorage).setSignInStatus(true);
+    verify(mockStorage).setSignInStatus(true);
   }
 
   @Test

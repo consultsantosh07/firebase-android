@@ -141,6 +141,12 @@ public interface FirebaseAppDistribution {
    */
   void startFeedback(@NonNull CharSequence infoText);
 
+  /**
+   * TODO(kbolay): write JavaDoc
+   */
+  void enableFeedbackNotification(int infoTextResourceId);
+  void enableFeedbackNotification(@NonNull CharSequence infoText);
+
   /** Gets the singleton {@link FirebaseAppDistribution} instance. */
   @NonNull
   static FirebaseAppDistribution getInstance() {

@@ -57,9 +57,7 @@ public class FirebaseAppDistributionStub implements FirebaseAppDistribution {
   }
 
   @Override
-  public void signOutTester() {
-    return;
-  }
+  public void signOutTester() {}
 
   @NonNull
   @Override
@@ -74,14 +72,16 @@ public class FirebaseAppDistributionStub implements FirebaseAppDistribution {
   }
 
   @Override
-  public void startFeedback(int infoTextResourceId) {
-    return;
-  }
+  public void startFeedback(int infoTextResourceId) {}
 
   @Override
-  public void startFeedback(@NonNull CharSequence infoText) {
-    return;
-  }
+  public void startFeedback(@NonNull CharSequence infoText) {}
+
+  @Override
+  public void enableFeedbackNotification(int infoTextResourceId) {}
+
+  @Override
+  public void enableFeedbackNotification(@NonNull CharSequence infoText) {}
 
   private static <TResult> Task<TResult> getNotImplementedTask() {
     return Tasks.forException(
