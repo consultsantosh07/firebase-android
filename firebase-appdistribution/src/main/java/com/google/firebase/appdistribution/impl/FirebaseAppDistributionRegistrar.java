@@ -101,6 +101,8 @@ public class FirebaseAppDistributionRegistrar implements ComponentRegistrar {
 
     // we don't want default trigger state to persist across app restarts
     storage.setDefaultTriggerInfo((String) null);
+    createNotificationChannel(context);
+
     if (context instanceof Application) {
       Application firebaseApplication = (Application) context;
       firebaseApplication.registerActivityLifecycleCallbacks(lifecycleNotifier);
