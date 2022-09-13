@@ -132,10 +132,7 @@ public class TesterSignInManagerTest {
 
     testerSignInManager =
         new TesterSignInManager(
-            firebaseApp,
-            mockFirebaseInstallationsProvider,
-                mockStorage,
-            mockLifecycleNotifier);
+            firebaseApp, mockFirebaseInstallationsProvider, mockStorage, mockLifecycleNotifier);
   }
 
   @Test

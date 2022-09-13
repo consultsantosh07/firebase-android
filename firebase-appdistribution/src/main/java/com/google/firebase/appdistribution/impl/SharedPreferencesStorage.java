@@ -16,10 +16,7 @@ package com.google.firebase.appdistribution.impl;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import androidx.annotation.Nullable;
-
-import java.util.Optional;
 
 /** Class that handles storage for App Distribution SignIn persistence. */
 class SharedPreferencesStorage {
@@ -27,13 +24,12 @@ class SharedPreferencesStorage {
   private static final String PREFERENCES_NAME = "FirebaseAppDistributionSignInStorage";
   private static final String SIGNIN_TAG = "firebase_app_distribution_signin";
   private static final String DEFAULT_TRIGGER_INFO_TAG =
-          "firebase_app_distribution_feedback_default_trigger_info";
+      "firebase_app_distribution_feedback_default_trigger_info";
 
   private final SharedPreferences preferences;
 
   SharedPreferencesStorage(Context applicationContext) {
-    preferences =
-        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
+    preferences = applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE);
   }
 
   void setSignInStatus(boolean testerSignedIn) {

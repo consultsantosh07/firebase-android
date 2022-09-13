@@ -36,7 +36,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.TaskCompletionSource;
 import com.google.android.gms.tasks.Tasks;
@@ -394,8 +393,10 @@ class FirebaseAppDistributionImpl implements FirebaseAppDistribution {
       Intent intent = new Intent(activity, FeedbackActivity.class);
       intent.putExtra(RELEASE_NAME_EXTRA_KEY, "TODO: get release name"); // requires login
       intent.putExtra(INFO_TEXT_EXTRA_KEY, triggerInfo);
-      PendingIntent pendingIntent = PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-      NotificationCompat.Builder builder = new NotificationCompat.Builder(activity, FEEBACK_TRIGGER_CHANNEL_ID)
+      PendingIntent pendingIntent =
+          PendingIntent.getActivity(activity, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+      NotificationCompat.Builder builder =
+          new NotificationCompat.Builder(activity, FEEBACK_TRIGGER_CHANNEL_ID)
               .setSmallIcon(activity.getApplicationInfo().icon)
               .setContentTitle(activity.getText(R.string.default_feedback_trigger_title))
               .setContentText(activity.getText(R.string.default_feedback_trigger_text))

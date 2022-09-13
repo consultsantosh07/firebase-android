@@ -20,7 +20,6 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
 import android.support.multidex.BuildConfig;
-
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import com.google.firebase.FirebaseApp;
@@ -123,7 +122,8 @@ public class FirebaseAppDistributionRegistrar implements ComponentRegistrar {
     // Create the NotificationChannel, but only on API 26+ because
     // the NotificationChannel class is new and not in the support library
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-      NotificationChannel channel = new NotificationChannel(
+      NotificationChannel channel =
+          new NotificationChannel(
               FEEBACK_TRIGGER_CHANNEL_ID,
               context.getString(R.string.feedback_trigger_channel_name),
               NotificationManager.IMPORTANCE_MIN);

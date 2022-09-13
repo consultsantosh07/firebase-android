@@ -161,7 +161,7 @@ public class FirebaseAppDistributionServiceImplTest {
                 mockNewReleaseFetcher,
                 mockApkUpdater,
                 mockAabUpdater,
-                    mockStorage,
+                mockStorage,
                 mockLifecycleNotifier,
                 mockReleaseIdentifier,
                 mockScreenshotTaker,
