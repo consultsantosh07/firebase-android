@@ -19,7 +19,6 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.os.Build;
-import android.support.multidex.BuildConfig;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import com.google.firebase.FirebaseApp;
